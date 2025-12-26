@@ -1,0 +1,15 @@
+transformers
+huggingface-hub
+accelerate
+einops
+fire
+safetensors
+sentencepiece
+tokenizers
+protobuf
+requests
+invisible-watermark
+ruff
+diffusers
+GGUF
+ray[default]

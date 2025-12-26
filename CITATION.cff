@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+title: "Natural CAD Component Image Generation"
+authors:
+  - name: Your Name
+    affiliation: Your Institution
+version: 1.0.0
+date-released: 2025-01-01
+license: MIT
+references:
+  - type: software
+    title: pythonocc
+    authors:
+      - family-names: Paviot
+        given-names: Thomas
+    doi: 10.5281/zenodo.3605364
+  - type: article
+    title: "FLUX.1 Kontext: Flow Matching for In-Context Image Generation and Editing in Latent Space"
+    authors:
+      - family-names: Black Forest Labs
+    year: 2025
+    url: https://arxiv.org/abs/2506.15742
