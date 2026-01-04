@@ -12,7 +12,7 @@ class Img2BrepPipeline:
     def __init__(self, config: Img2BrepConfig):
         self.config = config
         self.pipeline = self._init_pipe()
-        self.prompt_embeds, self.pooled_prompt_embeds, _ = self._preencode_prompt(self.pipeline, self.config.prompt)
+        self.prompt_embeds, self.pooled_prompt_embeds, _ = self._preencode_prompt(self.pipeline, self.config.prompt) if self.config.pre_encode_text else None, None, None
         self.gen = torch.Generator(device=self.config.device).manual_seed(self.config.seed)
     
     def _init_pipe(self):
@@ -69,6 +69,7 @@ class Img2BrepPipeline:
             img = Image.fromarray(img).convert("RGB")
             out = self.pipeline(
                 image=img,
+                prompt= self.config.prompt if not self.config.pre_encode_text else None,
                 prompt_embeds=self.prompt_embeds,
                 pooled_prompt_embeds=self.pooled_prompt_embeds,
                 num_inference_steps=self.config.num_steps,

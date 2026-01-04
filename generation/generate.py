@@ -6,16 +6,16 @@ import traceback
 from math import ceil
 from pathlib import Path
 from PIL import Image
-from .config import Img2BrepConfig
+from .config import Img2BrepConfig, build_prompt
 from .pipeline import Img2BrepPipeline
 
 # -----------------------------
 # Config
 # -----------------------------
 IMG_ROOT = Path("/mnt/d/data/abc_v2_npz/abc_v2_npz")
-OUT_DIR = Path("/mnt/d/data/abc_v2_natural")
-NUM_SERVER = 0
-TOTAL_NUM_SERVER = 1
+OUT_DIR = Path("/mnt/d/data/abc_v2_natural_AA_RndTexture")
+NUM_SERVER = 4
+TOTAL_NUM_SERVER = 5
 os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
 
@@ -51,14 +51,19 @@ def generate(config_dict: dict, folder_chunk: list[str], chunk_id: int):
 
         out_root = Path(OUT_DIR.as_posix() + f"_{NUM_SERVER}")
 
-        for folder_str in folder_chunk:
+        for i, folder_str in enumerate(folder_chunk):
             img_folder = Path(folder_str)
             data_file = img_folder / "data.npz"
 
             arr = np.load(data_file)["svr_imgs"]
-            idx = 64 if arr.shape[0] > 64 else 0
+            
+            hashseed = hash(img_folder.stem) % (2**32)
+            rng = np.random.default_rng(seed=hashseed)
+            idx = rng.integers(64, 128)
             img_data = arr[idx]
 
+            random_prompt = build_prompt(config.prompt, seed=hashseed)
+            config.prompt = random_prompt
             generated_img: Image.Image = pipe(img_data)
 
             output_path = out_root / img_folder.stem / "natural.png"
@@ -95,9 +100,9 @@ if __name__ == "__main__":
     chunks = chunk_list(server_folders, num_gpus)
     chunks = [[p.as_posix() for p in chunk] for chunk in chunks]
     
-    ##########################
-    # Step4: Multiprocessing #
-    ##########################
+    # ##########################
+    # # Step4: Multiprocessing #
+    # ##########################
     refs = [generate.remote(config_dict, chunks[i], i) for i in range(len(chunks))]
     outs = ray.get(refs)    
     
