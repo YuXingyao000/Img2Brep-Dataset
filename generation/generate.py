@@ -85,7 +85,8 @@ if __name__ == "__main__":
     # Step1: Initialization #
     #########################
     config = Img2BrepConfig()
-    config_dict = {} # put overrides here, e.g. {"base_model_path": "..."}
+    config_dict = {}
+    config_dict["pre_encode_text"] = False
     # Example:
     # config_dict["base_model_path"] = "/path/to/base"
     
