@@ -12,9 +12,9 @@ from .pipeline import Img2BrepPipeline
 # -----------------------------
 # Config
 # -----------------------------
-IMG_ROOT = Path("/mnt/d/data/abc_v2_npz/abc_v2_npz")
-OUT_DIR = Path("/mnt/d/data/abc_v2_natural_AA_RndTexture")
-NUM_SERVER = 4
+IMG_ROOT = Path("/mnt/d/data/abc_v2_natural_AA_Sketch2")
+OUT_DIR = Path("/mnt/d/data/abc_v2_natural_AA_Sketch2_generated")
+NUM_SERVER = 0
 TOTAL_NUM_SERVER = 5
 os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
@@ -36,7 +36,23 @@ def chunk_list(xs: list[Path], n: int) -> list[list[Path]]:
     k = ceil(len(xs) / n)
     return [xs[i * k : (i + 1) * k] for i in range(n)]
 
-@ray.remote(num_gpus=1)
+def load_img_from_npz(config, img_folder: Path) -> np.ndarray:
+    data_file = img_folder / "data.npz"
+
+    arr = np.load(data_file)["svr_imgs"]
+            
+    hashseed = hash(img_folder.stem) % (2**32)
+    rng = np.random.default_rng(seed=hashseed + config.seed)
+    idx = rng.integers(64, 128)
+    img_data = arr[idx]
+    return img_data
+
+def load_img(img_folder: Path) -> np.ndarray:
+    img_file = img_folder / "sketch.png"
+    img_data = np.array(Image.open(img_file).convert("RGB"))
+    return img_data
+
+# @ray.remote(num_gpus=1)
 def generate(config_dict: dict, folder_chunk: list[str], chunk_id: int):
     """
     Pass strings/paths as strings to reduce serialization surprises.
@@ -53,17 +69,10 @@ def generate(config_dict: dict, folder_chunk: list[str], chunk_id: int):
 
         for i, folder_str in enumerate(folder_chunk):
             img_folder = Path(folder_str)
-            data_file = img_folder / "data.npz"
+            img_data = load_img(img_folder)
 
-            arr = np.load(data_file)["svr_imgs"]
-            
-            hashseed = hash(img_folder.stem) % (2**32)
-            rng = np.random.default_rng(seed=hashseed)
-            idx = rng.integers(64, 128)
-            img_data = arr[idx]
-
-            random_prompt = build_prompt(config.prompt, seed=hashseed)
-            config.prompt = random_prompt
+            # random_prompt = build_prompt(config.prompt, seed=hashseed)
+            # config.prompt = random_prompt
             generated_img: Image.Image = pipe(img_data)
 
             output_path = out_root / img_folder.stem / "natural.png"
@@ -76,6 +85,8 @@ def generate(config_dict: dict, folder_chunk: list[str], chunk_id: int):
         return (False, chunk_id, traceback.format_exc())
 
 
+
+
 if __name__ == "__main__":
     num_gpus = torch.cuda.device_count() if torch.cuda.is_available() else 0
     assert num_gpus > 0, "No CUDA GPUs visible."
@@ -86,7 +97,7 @@ if __name__ == "__main__":
     #########################
     config = Img2BrepConfig()
     config_dict = {}
-    config_dict["pre_encode_text"] = False
+    config_dict["pre_encode_text"] = True
     # Example:
     # config_dict["base_model_path"] = "/path/to/base"
     
@@ -104,6 +115,7 @@ if __name__ == "__main__":
     # ##########################
     # # Step4: Multiprocessing #
     # ##########################
+    generate(config_dict, chunks[0], 0)  # for debugging
     refs = [generate.remote(config_dict, chunks[i], i) for i in range(len(chunks))]
     outs = ray.get(refs)    
     

@@ -51,8 +51,9 @@ class Img2BrepConfig:
     transformer_path: Path = "/mnt/d/model/Flux1_Kontext_dev_GGUF/flux1-kontext-dev-Q8_0.gguf"
     base_model_path: Path = "/mnt/d/model/Flux1_Kontext_dev"
 
-    prompt: str = "Make this CAD model render look like a real CAD component photo, realistic lighting, metallic materials. Pure white background. Maintain sharp boundaries. Remove jagged edges (anti-aliasing), No jagged textures. High detail and clarity."
-
+    pos_prompt: str = "technical mechanical engineering sketch, hand-drawn pencil lineart on paper, subtle line wobble, pressure-sensitive strokes, varying line weight, slightly darker outer contour, faint construction lines, clean drafting style, light paper grain, minimal shading, precise geometry, engineer sketch, CAD model sketch"
+    neg_prompt: str = "photorealistic, color, watercolor, heavy shading, messy scribbles, comic style, cartoon, thick marker, ink wash, texture overload, distorted geometry, extra parts, text, watermarks, low quality, blurry, out of focus"
+    
     pre_encode_text: bool = True
     device: torch.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     dtype: torch.dtype = torch.bfloat16
