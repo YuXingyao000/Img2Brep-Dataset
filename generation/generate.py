@@ -52,7 +52,7 @@ def load_img(img_folder: Path) -> np.ndarray:
     img_data = np.array(Image.open(img_file).convert("RGB"))
     return img_data
 
-# @ray.remote(num_gpus=1)
+@ray.remote(num_gpus=1)
 def generate(config_dict: dict, folder_chunk: list[str], chunk_id: int):
     """
     Pass strings/paths as strings to reduce serialization surprises.
