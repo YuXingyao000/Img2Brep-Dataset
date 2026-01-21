@@ -85,8 +85,6 @@ def generate(config_dict: dict, folder_chunk: list[str], chunk_id: int):
         return (False, chunk_id, traceback.format_exc())
 
 
-
-
 if __name__ == "__main__":
     num_gpus = torch.cuda.device_count() if torch.cuda.is_available() else 0
     assert num_gpus > 0, "No CUDA GPUs visible."
@@ -115,7 +113,6 @@ if __name__ == "__main__":
     # ##########################
     # # Step4: Multiprocessing #
     # ##########################
-    generate(config_dict, chunks[0], 0)  # for debugging
     refs = [generate.remote(config_dict, chunks[i], i) for i in range(len(chunks))]
     outs = ray.get(refs)    
     
